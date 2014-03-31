@@ -1,0 +1,137 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+iframe {
+    vertical-align: top;
+}
+img {
+    max-width: 100%;
+}
+#canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width:100%;
+    height:100%;
+    z-index: 0;
+}
+#map {
+    width:100%;
+    height:100%;
+    position:"absolute";
+    top: 0;
+    left: 0;
+    overflow:"hidden";
+}
+.row.fileupload-buttonbar {
+    display: none;
+}
+.table.table-striped {
+    position: fixed;
+    bottom: -20px;
+    border-top: 2px solid #7dbd00;
+}
+.files {
+    border-color: rgba(0, 0, 0, 1.0);
+}
+td {
+    background-color: #ffffff !important;
+    color: #ffffff;
+}
+.table thead>tr>th, .table tbody>tr>th, .table tfoot>tr>th, .table thead>tr>td, .table tbody>tr>td, .table tfoot>tr>td {
+    border-top-color: rgba(0, 0, 0, 0);
+}
+.hide, .template-download {
+    display: none !important;
+    border-top-color: rgba(0, 0, 0, 1.0);
+}
+.gm-style-iw + div {
+    display: none;
+}
+aside {
+    font: normal 1.2em/1.4'Open Sans', arial, sans-serif;
+    width: 25%;
+    height: 100%;
+    z-index: 10;
+    background: white;
+    position: fixed;
+    top: 0;
+}
+.msg {
+    border: 1px solid #ddd;
+    padding: 10px;
+    height: 68px;
+    resize: none;
+    margin: 25px;
+    width: calc(100% - 50px);
+    outline: none;
+    border-radius: 2px;
+}
+.stat {
+    color: #666;
+    font-weight: bold;
+    margin: 0 30px;
+}
+.counter {
+    display: inline-block;
+    color: #888;
+}
+.msg-submit {
+    display: inline-block;
+    background: #7dbd00;
+    border: none;
+    outline: none;
+    color: white;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 7px 20px;
+    margin: 0 10px 10px 0;
+    border-radius: 2px;
+}
+.msg-submit:hover {
+    text-decoration: none;
+    color: white
+}
+.btn.btn-primary.start {
+    float: right;
+    margin: 25px 30px;
+    outline: none;
+    border-radius: 2px;
+    background: white;
+    border-color: #7dbd00;
+    color: #7dbd00;
+}
+.btn.btn-warning.cancel {
+    float: right;
+    margin: 25px 10px;
+    outline: none;
+    border-radius: 2px;
+    background: #7dbd00;
+    border-color: #7dbd00;
+    color: white;
+}
+aside img {
+    display: inline-block;
+    width: 40%;
+    margin: 25px 4% 0 4%;
+}
+aside footer {
+    position: fixed;
+    bottom: 35px;
+    width: 25%;
+}
+aside footer .rdio {
+    margin: 0 8px;
+}
+@media handheld, only screen and (max-width: 1050px) {
+    aside {
+        font: normal 1.2em/1.4'Open Sans', arial, sans-serif;
+        width: 100%;
+        padding-bottom: 20px;
+        height: auto;
+    }
+    footer {
+        display: none
+    }
+}

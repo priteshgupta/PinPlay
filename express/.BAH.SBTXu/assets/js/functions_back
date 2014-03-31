@@ -1,0 +1,333 @@
+// FIX THIS
+$(function () {
+    navigator.geolocation.getCurrentPosition(initialize);
+
+    setInterval(function () {
+        //console.log(allMarkers);
+        $.get("upload/return.php?type=file", function (Data) {
+            data = JSON.parse(Data);
+            //console.log(data);
+            updateView(data, "file");
+
+        });
+
+        $.get("upload/return.php?type=text", function (Data) {
+            msg_data = JSON.parse(Data);
+            //console.log(data);
+            updateView(msg_data, "text");
+        });
+    }, 500);
+});
+
+// Set Global vars
+var data,
+    msg_data,
+    map,
+    newPins = [],
+    iconBase = 'https://maps.google.com/mapfiles/',
+    allMarkers = [],
+    selfmsgWindow,
+    curLatLng;
+
+// Vars for various type of markers
+var bluMarker = {
+    	url: 'assets/img/pins/pin1.png',
+        scaledSize: new google.maps.Size(48, 48)
+    },
+    redMarker = {
+        url: 'assets/img/pins/pin4.png',
+        scaledSize: new google.maps.Size(48, 48)
+    },
+    grnMarker = {
+        url: 'assets/img/pins/pin8.png',
+        scaledSize: new google.maps.Size(48, 48)
+    },
+    homeMarker = {
+        url: 'assets/img/pins/pin9.png',
+        scaledSize: new google.maps.Size(48, 48)
+    };
+
+// Initial/default latLng
+var latLng = new google.maps.LatLng(null, null);
+
+/**
+ * Initialize the app
+ * 
+ * @param  {cord}   position Current location
+ */
+function initialize(position) {
+    latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+
+    var myOptions = {
+        panControl: false,
+        zoomControl: true,
+        zoomControlOptions: {
+            style: google.maps.ZoomControlStyle.LARGE,
+            position: google.maps.ControlPosition.RIGHT_CENTER
+        },
+        mapTypeControl: false,
+        scaleControl: false,
+        streetViewControl: false,
+        overviewMapControl: false,
+        draggable: true,
+        disableDoubleClickZoom: true,
+        scrollwheel: true,
+        zoom: 14,
+        center: latLng,
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+    };
+
+    map = new google.maps.Map(document.getElementById("map"), myOptions);
+
+    var markerlatlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+
+    var marker = new google.maps.Marker({
+        position: markerlatlng,
+        title: "I am here!",
+        icon: homeMarker,
+        zIndex: 1000
+    });
+
+    selfmsgWindow = addInfoWindow(marker, "<h3>Me</h3>");
+
+    allMarkers.push(marker);
+
+    marker.setMap(map);
+
+    google.maps.event.addListener(map, 'mousemove', function (event) {
+        updateCurLatLong(event);
+    });
+
+    $("#zo").click(function (event) {
+        event.preventDefault();
+        map.setZoom(map.getZoom() - 1);
+    });
+
+    $("#zi").click(function (event) {
+        event.preventDefault();
+        map.setZoom(map.getZoom() + 1);
+    });
+
+    $("#gt").click(function (event) {
+        event.preventDefault();
+        var lt1 = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+        map.panTo(lt1);
+    });
+}
+
+// function allowDrop(event) {
+//     updateCurLatLong(event);
+//     event.preventDefault();
+// }
+
+/**
+ * Update the lat and long
+ * 
+ * @param  {event} event
+ */
+function updateCurLatLong(event) {
+    curLatLng = event.latLng;
+}
+
+$('.msg').bind('keyup blur', function() {
+    $('.counter').html(100 - $('.msg').val().length)
+})
+
+/**
+ * Bind to file upload
+ * 
+ * @param  {event}  e     
+ * @param  {file}   addData
+ */
+$('#fileupload').bind('fileuploadadd', function (e, addData) {
+    var marker = addMarker(curLatLng, true, 'file', addData.files[0].name);
+    marker.setIcon(redMarker);
+
+    if (marker !== null) {
+
+        /**
+         * If upload failed, remove the currently drop marker
+         * 
+         * @param  {event}  e    
+         * @param  {file}   data 
+         */
+        $('#fileupload').bind('fileuploadfail', function (e, failData) {
+            if (addData.files[0] === failData.files[0]) {
+                removeMarker(marker);
+            }
+        });
+
+        /**
+         * If upload successful, add the marker to marker array
+         * 
+         * @param  {event}  e    
+         * @param  {file}   data 
+         */
+        $('#fileupload').bind('fileuploaddone', function (e, data) {
+            marker.setDraggable(false);
+			if(isWithinBounds(allMarkers[0], marker)) {
+				marker.setIcon(bluMarker);
+                console.log("adding download listener");
+                addDownload(marker, data.files[0].name);
+			} else {
+				marker.setIcon(grnMarker);
+			} 
+
+            /**
+             * Upload the file to the server
+             * 
+             * @type {url}
+             */
+            $.post("server/php/insert.php?type=file", { 
+                fname: data.files[0].name,
+                lat: marker.position.lat(), 
+                long: marker.position.lng()
+            });
+        });
+    }
+
+});
+
+/**
+ * Check two markers are within bounds
+ * 
+ * @param  {marker}  marker1
+ * @param  {marker}  marker2
+ * @return {Boolean}        
+ */
+function isWithinBounds(marker1, marker2){
+    var sw = new google.maps.LatLng(marker1.getPosition().lat() 
+        - 0.025, marker1.getPosition().lng() - 0.025);
+    var ne = new google.maps.LatLng(marker1.getPosition().lat() 
+        + 0.025, marker1.getPosition().lng() + 0.025);
+    var marker1Bounds = new google.maps.LatLngBounds(sw, ne);
+
+    return marker1Bounds.contains(marker2.getPosition());
+}
+
+/**
+ * Remove a marker from the map
+ * 
+ * @param  {marker} marker
+ */
+function removeMarker(marker) {
+    marker.setMap(null);
+    marker = null;
+}
+
+/**
+ * Add a marker to the map
+
+ * @param {marker}  obj       
+ * @param {Boolean} draggable 
+ * @param {string}  type      
+ * @param {string}  filename  
+ */
+function addMarker(obj, draggable, type, filename) {
+    // console.log(obj)
+
+    for (var j = 0; j < allMarkers.length; j++) {
+        if (allMarkers[j].position.equals(obj)) {
+            return null;
+        }
+    }
+
+    var marker = new google.maps.Marker({
+        position: obj,
+        map: map,
+        draggable: draggable,
+        animation: google.maps.Animation.DROP,
+        icon: grnMarker
+    });
+
+    if(isWithinBounds(allMarkers[0], marker)){
+        marker.setIcon(bluMarker);
+        if(type == 'file'){
+            addDownload(marker, filename);
+        }
+    }
+
+    allMarkers.push(marker);
+    var info = addInfoWindow(marker, "<p>" + filename + "</p>");
+    if(type == 'text'){
+        info.open(map, marker);
+    }
+
+    return marker;
+}
+
+/**
+ * Update the map
+ * 
+ * @param  {markers} data
+ * @param  {string}  type kind of marker ('file', 'text')
+ */
+function updateView(data, type) {
+    for (var i = 0; i < data.length; i++) {
+        var obj = new google.maps.LatLng(data[i].lat, data[i].long);
+
+        if (type == 'file') {
+            addMarker(obj, false, 'file', data[i].file);
+        } else {
+            addMarker(obj, false, 'text', data[i].text);
+        }
+    }
+}
+
+/**
+ * Add an info window
+ * 
+ * @param {marker}  marker
+ * @param {string]} html  
+ */
+function addInfoWindow(marker, html){
+    var iWin = new google.maps.InfoWindow(
+        {
+            disableAutoPan: true, 
+            content: html, 
+        });
+
+    google.maps.event.addListener(marker, 'mouseover', function() {
+        iWin.open(map,marker);
+    });
+    google.maps.event.addListener(marker, 'mouseout', function() {
+        iWin.close();
+    });
+
+    return iWin;
+}
+
+/**
+ * Marker for download
+ * 
+ * @param {marker} marker   
+ * @param {string} filename 
+ */
+function addDownload(marker, filename){
+    // console.log("adding download listener for " + filename);
+    google.maps.event.addListener(marker, 'click', function (e) {
+        console.log(e);
+        e.preventDefault ? e.preventDefault() : e.returnValue = false;
+        e.stop();
+        console.log("trying to download "+filename);
+        window.location = "server/php/files/" + filename;
+    });
+}
+/** msg STUFF GOES HERE **/
+
+$('.msg-submit').bind('click', function(event) {
+
+    var msg = $('.msg').val();
+    // console.log(msg);
+    $.post('server/php/insert.php?type=text', 
+        {
+            msg:msg, 
+            lat: allMarkers[0].position.lat(), 
+            long: allMarkers[0].position.lng()
+        });
+
+    selfmsgWindow.setContent(msg);
+    selfmsgWindow.open(map, allMarkers[0]);
+
+    event.preventDefault();
+});
