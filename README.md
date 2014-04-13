@@ -1,8 +1,6 @@
 PinPlay
 =======
 
-Hack for HackPrinceton
-
 **TL;DR** Location based music sharing and playing via mobile, email and web app.
 
 ## Long Description
